@@ -67,6 +67,9 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
       final lists = await _repository.getShoppingLists(familyId);
 
       state = state.copyWith(isLoading: false, lists: lists, error: null);
+      
+      // 統計プロバイダーを無効化して最新データを取得
+      _ref.invalidate(shoppingListStatsProvider);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -133,6 +136,9 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
 
       // リスト一覧を更新（一時的に無効化）
       // await loadShoppingLists();
+      
+      // 統計プロバイダーのキャッシュを明示的に無効化
+      _ref.invalidate(shoppingListStatsProvider);
 
       state = state.copyWith(
         isLoading: false,
@@ -232,6 +238,9 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
 
       // 現在のリストを再取得
       await loadShoppingList(shoppingListId);
+      
+      // 統計プロバイダーのキャッシュを明示的に無効化
+      _ref.invalidate(shoppingListStatsProvider);
 
       state = state.copyWith(isLoading: false, error: null);
 
@@ -258,7 +267,8 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
       // 現在のリストを再取得
       if (state.selectedList != null) {
         await loadShoppingList(state.selectedList!.id);
-        // 統計プロバイダーのキャッシュをクリア（autoDisposeなので自動的にリフレッシュされる）
+        // 統計プロバイダーのキャッシュを明示的に無効化
+        _ref.invalidate(shoppingListStatsProvider);
       }
 
       state = state.copyWith(isLoading: false, error: null);
@@ -286,7 +296,8 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
       // 現在のリストを再取得
       if (state.selectedList != null) {
         await loadShoppingList(state.selectedList!.id);
-        // 統計プロバイダーのキャッシュをクリア（autoDisposeなので自動的にリフレッシュされる）
+        // 統計プロバイダーのキャッシュを明示的に無効化
+        _ref.invalidate(shoppingListStatsProvider);
       }
 
       state = state.copyWith(isLoading: false, error: null);
@@ -311,7 +322,8 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
       // 現在のリストを再取得
       if (state.selectedList != null) {
         await loadShoppingList(state.selectedList!.id);
-        // 統計プロバイダーのキャッシュをクリア（autoDisposeなので自動的にリフレッシュされる）
+        // 統計プロバイダーのキャッシュを明示的に無効化
+        _ref.invalidate(shoppingListStatsProvider);
       }
 
       state = state.copyWith(isLoading: false, error: null);
@@ -333,7 +345,8 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
       // 現在のリストを再取得
       if (state.selectedList != null) {
         await loadShoppingList(state.selectedList!.id);
-        // 統計プロバイダーのキャッシュをクリア（autoDisposeなので自動的にリフレッシュされる）
+        // 統計プロバイダーのキャッシュを明示的に無効化
+        _ref.invalidate(shoppingListStatsProvider);
       }
 
       state = state.copyWith(isLoading: false, error: null);
@@ -461,8 +474,8 @@ final childShoppingListProvider = FutureProvider<List<ShoppingList>>((
 });
 
 /// 買い物リスト統計プロバイダー
-final shoppingListStatsProvider =
-    FutureProvider.family<Map<String, int>, String>((ref, listId) async {
+final shoppingListStatsProvider = FutureProvider.family
+    .autoDispose<Map<String, int>, String>((ref, listId) async {
       final repository = ref.read(shoppingListRepositoryProvider);
       return repository.getShoppingItemStats(listId);
     });

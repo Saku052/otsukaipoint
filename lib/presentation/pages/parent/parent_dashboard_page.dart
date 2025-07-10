@@ -14,15 +14,52 @@ class ParentDashboardPage extends ConsumerStatefulWidget {
   const ParentDashboardPage({super.key});
 
   @override
-  ConsumerState<ParentDashboardPage> createState() => _ParentDashboardPageState();
+  ConsumerState<ParentDashboardPage> createState() =>
+      _ParentDashboardPageState();
 }
 
-class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
+class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // ページ読み込み時にデータを取得
+    _refreshData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // アプリがフォアグラウンドに復帰した時にデータを更新
+      _refreshData();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 画面が再表示された時にデータを更新
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _refreshData();
+      }
+    });
+  }
+
+  /// データを更新
+  void _refreshData() {
     Future.microtask(() {
+      // 統計プロバイダーを完全に無効化
+      ref.invalidate(shoppingListStatsProvider);
+      // 買い物リストプロバイダーを更新
       ref.read(shoppingListProvider.notifier).loadShoppingLists();
       ref.read(approvalProvider.notifier).loadPendingApprovalItems();
     });
@@ -44,9 +81,7 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
             icon: const Icon(Icons.bug_report),
             onPressed: () => Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => const DebugLogPage(),
-              ),
+              MaterialPageRoute(builder: (context) => const DebugLogPage()),
             ),
           ),
           Stack(
@@ -168,7 +203,9 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
                 Text(
                   '今日も子どもたちと楽しいお買い物を！',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -186,9 +223,9 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
       children: [
         Text(
           'クイックアクション',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
         Row(
@@ -280,16 +317,18 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
             const SizedBox(height: 12),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -302,7 +341,10 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
   }
 
   /// 承認待ちセクション
-  Widget _buildPendingApprovalSection(BuildContext context, ApprovalState state) {
+  Widget _buildPendingApprovalSection(
+    BuildContext context,
+    ApprovalState state,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -311,9 +353,9 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
             Expanded(
               child: Text(
                 '承認待ち',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             if (state.pendingItems.isNotEmpty)
@@ -324,7 +366,7 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
           ],
         ),
         const SizedBox(height: 12),
-        
+
         if (state.isLoading)
           const Center(child: AppLoadingIndicator())
         else if (state.pendingItems.isEmpty)
@@ -336,13 +378,17 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
                   Icon(
                     Icons.check_circle,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     '承認待ちの商品はありません',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -350,51 +396,58 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
             ),
           )
         else
-          ...state.pendingItems.take(3).map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              leading: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.tertiaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.schedule,
-                  color: Theme.of(context).colorScheme.tertiary,
-                  size: 20,
-                ),
-              ),
-              title: Text(item.name),
-              subtitle: Text('完了報告済み'),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: () => _approveItem(item.id),
-                    icon: Icon(
-                      Icons.check,
-                      color: Theme.of(context).colorScheme.primary,
+          ...state.pendingItems
+              .take(3)
+              .map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.tertiaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.schedule,
+                        color: Theme.of(context).colorScheme.tertiary,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(item.name),
+                    subtitle: Text('完了報告済み'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () => _approveItem(item.id),
+                          icon: Icon(
+                            Icons.check,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => _rejectItem(item.id),
+                          icon: Icon(
+                            Icons.close,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => _rejectItem(item.id),
-                    icon: Icon(
-                      Icons.close,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          )),
       ],
     );
   }
 
   /// 最近の買い物リスト
-  Widget _buildRecentShoppingLists(BuildContext context, ShoppingListState state) {
+  Widget _buildRecentShoppingLists(
+    BuildContext context,
+    ShoppingListState state,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -403,9 +456,9 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
             Expanded(
               child: Text(
                 '最近の買い物リスト',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             TextButton(
@@ -415,7 +468,7 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
           ],
         ),
         const SizedBox(height: 12),
-        
+
         if (state.isLoading && state.lists.isEmpty)
           const Center(child: AppLoadingIndicator())
         else if (state.lists.isEmpty)
@@ -427,20 +480,26 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
                   Icon(
                     Icons.shopping_cart_outlined,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     '買い物リストがありません',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '新しいリストを作成してみましょう',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -448,35 +507,44 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
             ),
           )
         else
-          ...state.lists.take(3).map((shoppingList) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Consumer(
-              builder: (context, ref, _) {
-                final statsAsync = ref.watch(shoppingListStatsProvider(shoppingList.id));
-                
-                return statsAsync.when(
-                  data: (stats) => ShoppingListCard(
-                    shoppingList: shoppingList,
-                    itemCount: stats['total'] ?? 0,
-                    completedItemCount: stats['completed'] ?? 0,
-                    approvedItemCount: stats['approved'] ?? 0,
-                    totalAllowanceAmount: 0.0, // TODO: 実際の計算
-                    earnedAllowanceAmount: 0.0, // TODO: 実際の計算
-                    isCompact: true,
-                    onTap: () => context.pushNamed('shoppingListDetail', pathParameters: {'listId': shoppingList.id}),
+          ...state.lists
+              .take(3)
+              .map(
+                (shoppingList) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Consumer(
+                    builder: (context, ref, _) {
+                      final statsAsync = ref.watch(
+                        shoppingListStatsProvider(shoppingList.id),
+                      );
+
+                      return statsAsync.when(
+                        data: (stats) => ShoppingListCard(
+                          shoppingList: shoppingList,
+                          itemCount: stats['total'] ?? 0,
+                          completedItemCount: stats['completed'] ?? 0,
+                          approvedItemCount: stats['approved'] ?? 0,
+                          totalAllowanceAmount: 0.0, // TODO: 実際の計算
+                          earnedAllowanceAmount: 0.0, // TODO: 実際の計算
+                          isCompact: true,
+                          onTap: () => context.pushNamed(
+                            'shoppingListDetail',
+                            pathParameters: {'listId': shoppingList.id},
+                          ),
+                        ),
+                        loading: () => const SizedBox(
+                          height: 80,
+                          child: Center(child: AppLoadingIndicator()),
+                        ),
+                        error: (_, __) => const SizedBox(
+                          height: 80,
+                          child: Center(child: Text('エラーが発生しました')),
+                        ),
+                      );
+                    },
                   ),
-                  loading: () => const SizedBox(
-                    height: 80,
-                    child: Center(child: AppLoadingIndicator()),
-                  ),
-                  error: (_, __) => const SizedBox(
-                    height: 80,
-                    child: Center(child: Text('エラーが発生しました')),
-                  ),
-                );
-              },
-            ),
-          )),
+                ),
+              ),
       ],
     );
   }
@@ -486,11 +554,11 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
     final success = await ref
         .read(approvalProvider.notifier)
         .approveItem(itemId);
-    
+
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('商品を承認しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('商品を承認しました')));
     }
   }
 
@@ -499,11 +567,11 @@ class _ParentDashboardPageState extends ConsumerState<ParentDashboardPage> {
     final success = await ref
         .read(approvalProvider.notifier)
         .rejectItem(itemId);
-    
+
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('商品を拒否しました')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('商品を拒否しました')));
     }
   }
 }

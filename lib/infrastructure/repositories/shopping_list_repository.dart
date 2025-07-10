@@ -439,10 +439,14 @@ class ShoppingListRepository {
   /// 商品の統計を取得
   Future<Map<String, int>> getShoppingItemStats(String listId) async {
     try {
+      print('📊 統計取得開始: $listId');
+      
       final response = await _supabaseService.client
           .from('shopping_items')
           .select('status')
           .eq('shopping_list_id', listId);
+
+      print('📊 統計取得結果: ${response.length}件');
 
       final stats = <String, int>{
         'total': response.length,
@@ -457,8 +461,10 @@ class ShoppingListRepository {
         stats[status] = (stats[status] ?? 0) + 1;
       }
 
+      print('📊 統計結果: $stats');
       return stats;
     } catch (e) {
+      print('❌ 統計取得エラー: $e');
       throw ServerException(message: '商品統計の取得に失敗しました: $e');
     }
   }
