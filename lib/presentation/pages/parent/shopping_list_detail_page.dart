@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../application/shopping/shopping_list_provider.dart';
 import '../../../application/auth/auth_provider.dart';
+import '../../../core/router/app_router.dart';
 import '../../../domain/entities/shopping_list.dart';
 import '../../../domain/entities/shopping_item.dart';
 import '../../widgets/common/app_button.dart';
@@ -48,6 +49,22 @@ class _ShoppingListDetailPageState extends ConsumerState<ShoppingListDetailPage>
         title: Text(shoppingList?.title ?? '買い物リスト'),
         elevation: 0,
         actions: [
+          IconButton(
+            onPressed: () => context.go(AppRouter.parentDashboard),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.home,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
+            ),
+            tooltip: 'ホームに戻る',
+          ),
           if (shoppingList != null) ...[
             IconButton(
               onPressed: () => _showListMenu(context, shoppingList),
