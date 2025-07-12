@@ -93,21 +93,39 @@ class QrService {
     Color? foregroundColor,
     Color? backgroundColor,
   }) {
-    return QrImageView(
-      data: data,
-      version: QrVersions.auto,
-      size: size,
-      errorCorrectionLevel: QrErrorCorrectLevel.M,
-      padding: const EdgeInsets.all(10),
-      dataModuleStyle: QrDataModuleStyle(
-        dataModuleShape: QrDataModuleShape.square,
-        color: foregroundColor ?? Colors.black,
-      ),
-      eyeStyle: QrEyeStyle(
-        eyeShape: QrEyeShape.square,
-        color: foregroundColor ?? Colors.black,
-      ),
-    );
+    try {
+      return QrImageView(
+        data: data,
+        version: QrVersions.auto,
+        size: size,
+        errorCorrectionLevel: QrErrorCorrectLevel.M,
+        padding: const EdgeInsets.all(10),
+        dataModuleStyle: QrDataModuleStyle(
+          dataModuleShape: QrDataModuleShape.square,
+          color: foregroundColor ?? Colors.black,
+        ),
+        eyeStyle: QrEyeStyle(
+          eyeShape: QrEyeShape.square,
+          color: foregroundColor ?? Colors.black,
+        ),
+      );
+    } catch (e) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          border: Border.all(color: Colors.grey),
+        ),
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, color: Colors.red),
+            Text('QRコード生成エラー', style: TextStyle(fontSize: 12)),
+          ],
+        ),
+      );
+    }
   }
 
   /// QRコードを画像として生成

@@ -297,11 +297,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
       await _supabaseService.client.auth.signOut();
+      
+      // 状態をクリア
+      state = const AuthState();
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: 'ログアウト中にエラーが発生しました',
       );
+      rethrow; // エラーを再スローして呼び出し側で処理できるようにする
     }
   }
 

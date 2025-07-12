@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../application/shopping/shopping_list_provider.dart';
+import '../../../core/router/app_router.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_text_field.dart';
 import '../../widgets/common/app_card.dart';
@@ -39,6 +40,24 @@ class _CreateShoppingListPageState extends ConsumerState<CreateShoppingListPage>
       appBar: AppBar(
         title: const Text('買い物リスト作成'),
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () => context.go(AppRouter.parentDashboard),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                Icons.home,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
+            ),
+            tooltip: 'ホームに戻る',
+          ),
+        ],
       ),
       body: Form(
         key: _formKey,

@@ -335,6 +335,49 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
     }
   }
 
+  /// 商品を更新
+  Future<bool> updateShoppingItem({
+    required String itemId,
+    String? name,
+    String? description,
+    double? estimatedPrice,
+    double? allowanceAmount,
+    String? assignedTo,
+    String? suggestedStore,
+  }) async {
+    try {
+      state = state.copyWith(isLoading: true, error: null);
+      
+      await _repository.updateShoppingItem(
+        itemId: itemId,
+        name: name,
+        description: description,
+        estimatedPrice: estimatedPrice,
+        allowanceAmount: allowanceAmount,
+        assignedTo: assignedTo,
+        suggestedStore: suggestedStore,
+      );
+      
+      // 現在のリストを再取得
+      if (state.selectedList != null) {
+        await loadShoppingList(state.selectedList!.id);
+      }
+      
+      state = state.copyWith(
+        isLoading: false,
+        error: null,
+      );
+      
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+      return false;
+    }
+  }
+
   /// 商品を削除
   Future<bool> deleteShoppingItem(String itemId) async {
     try {
