@@ -11,6 +11,7 @@ import '../../widgets/common/loading_indicator.dart';
 import '../../widgets/common/empty_state_widget.dart';
 import '../../widgets/shopping/shopping_item_card.dart';
 import '../../widgets/shopping/add_item_dialog.dart';
+import '../../widgets/shopping/edit_item_dialog.dart';
 
 /// 買い物リスト詳細ページ
 class ShoppingListDetailPage extends ConsumerStatefulWidget {
@@ -428,9 +429,9 @@ class _ShoppingListDetailPageState extends ConsumerState<ShoppingListDetailPage>
 
   /// 商品を編集
   void _editShoppingItem(BuildContext context, ShoppingItem item) {
-    // TODO: 商品編集ダイアログを表示
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('商品編集機能は準備中です')),
+    showDialog(
+      context: context,
+      builder: (context) => EditItemDialog(item: item),
     );
   }
 
