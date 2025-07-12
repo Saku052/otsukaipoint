@@ -3,7 +3,7 @@ import '../../domain/entities/shopping_list.dart';
 import '../../domain/entities/shopping_item.dart';
 import '../../infrastructure/repositories/shopping_list_repository.dart';
 import '../auth/auth_provider.dart';
-import 'dart:math';
+import '../family/family_provider.dart';
 
 /// 買い物リスト状態
 class ShoppingListState {
@@ -53,17 +53,20 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
     final user = _ref.read(currentUserProvider);
     if (user == null) return;
     
-    String? familyId = user.familyId;
-    
-    // 家族IDがない場合は、一時的にダミーの家族IDを使用
-    if (familyId == null) {
-      familyId = _generateFamilyId(user.id);
-    }
-
     try {
       state = state.copyWith(isLoading: true, error: null);
       
-      final lists = await _repository.getShoppingLists(familyId);
+      // 家族が存在することを確認
+      final familyNotifier = _ref.read(familyProvider.notifier);
+      await familyNotifier.ensureUserHasFamily();
+      
+      // 現在の家族を取得
+      final currentFamily = await familyNotifier.getCurrentFamily();
+      if (currentFamily == null) {
+        throw Exception('家族情報が見つかりません');
+      }
+      
+      final lists = await _repository.getShoppingLists(currentFamily.id);
       
       state = state.copyWith(
         isLoading: false,
@@ -107,34 +110,36 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
   }) async {
     final user = _ref.read(currentUserProvider);
     print('🛒 買い物リスト作成開始');
-    print('👤 ユーザー情報: ${user?.id}, 家族ID: ${user?.familyId}');
+    print('👤 ユーザー情報: ${user?.id}');
     
     if (user == null) {
       print('❌ ユーザーが null です');
       return null;
     }
-    
-    String? familyId = user.familyId;
-    
-    // 家族IDがない場合は、一時的にダミーの家族IDを使用
-    if (familyId == null) {
-      familyId = _generateFamilyId(user.id); // UUIDベースのダミー家族ID
-      print('⚠️ 家族IDが null です。生成したダミー家族ID: $familyId');
-    }
 
     try {
       state = state.copyWith(isLoading: true, error: null);
+      
+      // 家族が存在することを確認
+      final familyNotifier = _ref.read(familyProvider.notifier);
+      await familyNotifier.ensureUserHasFamily();
+      
+      // 現在の家族を取得
+      final currentFamily = await familyNotifier.getCurrentFamily();
+      if (currentFamily == null) {
+        throw Exception('家族情報が見つかりません。家族の作成に失敗しました。');
+      }
       
       print('📝 リスト作成パラメータ:');
       print('  - タイトル: $title');
       print('  - 説明: $description');
       print('  - 期限: $deadline');
       print('  - 商品数: ${items?.length ?? 0}');
-      print('  - 家族ID: $familyId');
+      print('  - 家族ID: ${currentFamily.id}');
       print('  - 作成者: ${user.id}');
       
       final newList = await _repository.createShoppingList(
-        familyId: familyId,
+        familyId: currentFamily.id,
         createdBy: user.id,
         title: title,
         description: description,
@@ -144,8 +149,8 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
       
       print('✅ 買い物リスト作成成功: ${newList.id}');
       
-      // リスト一覧を更新（一時的に無効化）
-      // await loadShoppingLists();
+      // リスト一覧を更新
+      await loadShoppingLists();
       
       state = state.copyWith(
         isLoading: false,
@@ -447,33 +452,6 @@ class ShoppingListNotifier extends StateNotifier<ShoppingListState> {
     state = state.copyWith(error: null);
   }
 
-  /// ユーザーIDから一意の家族IDを生成
-  String _generateFamilyId(String userId) {
-    // ユーザーIDをベースにしたUUID形式の家族IDを生成
-    // 形式: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx (UUID v4)
-    const chars = '0123456789abcdef';
-    
-    // UUIDの基本構造を維持しつつ、ユーザーIDのハッシュを使用
-    final hash = userId.hashCode.abs();
-    final seed = hash % 0xFFFFFFFF;
-    final rng = Random(seed);
-    
-    String uuid = '';
-    for (int i = 0; i < 32; i++) {
-      if (i == 8 || i == 12 || i == 16 || i == 20) {
-        uuid += '-';
-      }
-      if (i == 12) {
-        uuid += '4'; // UUID v4
-      } else if (i == 16) {
-        uuid += chars[8 + (rng.nextInt(4))]; // 8, 9, a, b
-      } else {
-        uuid += chars[rng.nextInt(16)];
-      }
-    }
-    
-    return uuid;
-  }
 }
 
 /// 承認待ち商品状態

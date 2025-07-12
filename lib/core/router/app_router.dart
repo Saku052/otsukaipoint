@@ -20,6 +20,7 @@ import '../../presentation/pages/parent/settings/parent_settings_page.dart';
 import '../../presentation/pages/parent/settings/notification_settings_page.dart';
 import '../../presentation/pages/parent/settings/allowance_settings_page.dart';
 import '../../presentation/pages/parent/settings/family_members_page.dart';
+import '../../presentation/pages/parent/settings/privacy_settings_page.dart';
 import '../../presentation/pages/child/settings/child_settings_page.dart';
 import '../../presentation/pages/child/settings/child_notification_settings_page.dart';
 import '../../presentation/pages/parent/allowance_adjustment_page.dart';
@@ -201,6 +202,14 @@ class AppRouter {
             child: parent.AllowanceHistoryPage(childId: childId),
           );
         },
+      ),
+      GoRoute(
+        path: '/parent/settings/privacy',
+        name: 'parentPrivacySettings',
+        builder: (context, state) => const RoleGuard(
+          allowedRoles: ['parent'],
+          child: PrivacySettingsPage(),
+        ),
       ),
       
       // Child Routes
