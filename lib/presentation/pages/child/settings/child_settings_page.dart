@@ -303,9 +303,20 @@ class ChildSettingsPage extends ConsumerWidget {
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              await ref.read(authProvider.notifier).signOut();
-              if (context.mounted) {
-                context.go('/auth/signin');
+              try {
+                await ref.read(authProvider.notifier).signOut();
+                if (context.mounted) {
+                  context.go('/login');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('ログアウトに失敗しました: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             child: const Text('ログアウト'),

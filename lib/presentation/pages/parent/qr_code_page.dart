@@ -23,11 +23,13 @@ class _QrCodePageState extends ConsumerState<QrCodePage> {
   @override
   void initState() {
     super.initState();
-    _generateQrCode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _generateQrCode();
+    });
   }
 
   Future<void> _generateQrCode() async {
-    if (_isGenerating) return;
+    if (_isGenerating || !mounted) return;
     
     setState(() {
       _isGenerating = true;
@@ -94,7 +96,7 @@ class _QrCodePageState extends ConsumerState<QrCodePage> {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'QRコード生成',
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -104,6 +106,7 @@ class _QrCodePageState extends ConsumerState<QrCodePage> {
             _buildQrCodeSection(),
             const SizedBox(height: 24),
             _buildActionButtons(),
+            const SizedBox(height: 32), // 下部余白を追加
           ],
         ),
       ),
@@ -138,13 +141,13 @@ class _QrCodePageState extends ConsumerState<QrCodePage> {
               title: 'QRコードを生成',
               description: '下のボタンでQRコードを作成します',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _buildInstructionStep(
               step: '2',
               title: '子供がスキャン',
               description: '子供のアプリでQRコードを読み取ります',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             _buildInstructionStep(
               step: '3',
               title: '連携完了',
@@ -154,7 +157,7 @@ class _QrCodePageState extends ConsumerState<QrCodePage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
+                color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.orange),
               ),
@@ -254,16 +257,24 @@ class _QrCodePageState extends ConsumerState<QrCodePage> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    child: QrService.instance.generateQrWidget(
-                      data: _qrData!,
-                      size: 220,
-                    ),
+                    child: _qrData != null
+                        ? LayoutBuilder(
+                            builder: (context, constraints) {
+                              final screenWidth = MediaQuery.of(context).size.width;
+                              final qrSize = (screenWidth * 0.5).clamp(180.0, 220.0);
+                              return QrService.instance.generateQrWidget(
+                                data: _qrData!,
+                                size: qrSize,
+                              );
+                            },
+                          )
+                        : const SizedBox.shrink(),
                   ),
                   const SizedBox(height: 16),
                   if (_inviteCode != null) ...[
