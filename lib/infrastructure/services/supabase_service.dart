@@ -155,5 +155,9 @@ class SupabaseService {
 
 /// SupabaseServiceプロバイダー
 final supabaseServiceProvider = Provider<SupabaseService>((ref) {
-  return SupabaseService.instance;
+  final service = SupabaseService.instance;
+  if (!service.isInitialized) {
+    throw StateError('SupabaseServiceが初期化されていません。main()でinitialize()を呼び出してください。');
+  }
+  return service;
 });

@@ -399,6 +399,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// アカウント削除後のクリーンアップ
+  Future<void> handleAccountDeletion() async {
+    try {
+      // ローカル状態をクリア
+      state = const AuthState();
+      
+      // Supabaseセッションもクリア
+      await _supabaseService.client.auth.signOut();
+    } catch (e) {
+      // エラーが発生してもクリーンアップは続行
+      state = const AuthState();
+    }
+  }
+
   /// エラーをクリア
   void clearError() {
     state = state.copyWith(error: null);

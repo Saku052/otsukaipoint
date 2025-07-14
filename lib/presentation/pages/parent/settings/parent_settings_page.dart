@@ -228,7 +228,7 @@ class ParentSettingsPage extends ConsumerWidget {
           subtitle: '全データを削除してアカウントを削除',
           icon: Icons.delete_forever,
           iconColor: Colors.red,
-          onTap: () => _showDeleteAccountDialog(context, ref),
+          onTap: () => context.push('/parent/settings/account-deletion'),
         ),
       ],
     );
@@ -348,34 +348,4 @@ class ParentSettingsPage extends ConsumerWidget {
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('アカウント削除'),
-        content: const Text(
-          'アカウントを削除すると、すべてのデータが完全に削除されます。この操作は取り消せません。\n\n本当に削除しますか？',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('キャンセル'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: アカウント削除の実装
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('アカウント削除機能は実装予定です'),
-                ),
-              );
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('削除'),
-          ),
-        ],
-      ),
-    );
-  }
 }

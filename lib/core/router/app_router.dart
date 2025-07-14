@@ -25,6 +25,9 @@ import '../../presentation/pages/child/settings/child_settings_page.dart';
 import '../../presentation/pages/child/settings/child_notification_settings_page.dart';
 import '../../presentation/pages/parent/allowance_adjustment_page.dart';
 import '../../presentation/pages/parent/allowance_history_page.dart' as parent;
+import '../../presentation/pages/auth/account_deleted_page.dart';
+import '../../presentation/pages/auth/account_restore_page.dart';
+import '../../presentation/pages/parent/settings/account_deletion_page.dart';
 
 /// アプリケーションのルーティング設定
 class AppRouter {
@@ -49,6 +52,9 @@ class AppRouter {
   static const String childSettings = '/child/settings';
   static const String notifications = '/notifications';
   static const String profile = '/profile';
+  static const String accountDeleted = '/account-deleted';
+  static const String accountRestore = '/account-restore';
+  static const String accountDeletion = '/parent/settings/account-deletion';
 
   static final GoRouter _router = GoRouter(
     initialLocation: splash,
@@ -211,6 +217,14 @@ class AppRouter {
           child: PrivacySettingsPage(),
         ),
       ),
+      GoRoute(
+        path: accountDeletion,
+        name: 'accountDeletion',
+        builder: (context, state) => const RoleGuard(
+          allowedRoles: ['parent'],
+          child: AccountDeletionPage(),
+        ),
+      ),
       
       // Child Routes
       GoRoute(
@@ -298,6 +312,35 @@ class AppRouter {
         path: profile,
         name: 'profile',
         builder: (context, state) => const Placeholder(), // TODO: ProfilePage(),
+      ),
+      
+      // Account deletion and restoration routes
+      GoRoute(
+        path: accountDeleted,
+        name: 'accountDeleted',
+        builder: (context, state) {
+          final scheduledDeleteAtParam = state.uri.queryParameters['scheduledDeleteAt'];
+          
+          if (scheduledDeleteAtParam == null) {
+            return const Scaffold(
+              body: Center(
+                child: Text('無効なアクセスです'),
+              ),
+            );
+          }
+          
+          final scheduledDeleteAt = DateTime.parse(scheduledDeleteAtParam);
+          
+          return AccountDeletedPage(
+            scheduledDeleteAt: scheduledDeleteAt,
+            familyImpact: null,
+          );
+        },
+      ),
+      GoRoute(
+        path: accountRestore,
+        name: 'accountRestore',
+        builder: (context, state) => const AccountRestorePage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
