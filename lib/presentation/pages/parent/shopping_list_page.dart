@@ -18,7 +18,7 @@ class ShoppingListPage extends ConsumerStatefulWidget {
 }
 
 class _ShoppingListPageState extends ConsumerState<ShoppingListPage> 
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   
   @override
   bool get wantKeepAlive => true;
@@ -26,9 +26,42 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // ページ読み込み時にリスト一覧を取得
+    _refreshData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // アプリがフォアグラウンドに復帰した時にデータを更新
+      _refreshData();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 画面が再表示された時にデータを更新
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _refreshData();
+      }
+    });
+  }
+
+  /// データを更新
+  void _refreshData() {
     Future.microtask(() {
       ref.read(shoppingListProvider.notifier).loadShoppingLists();
+      // 統計プロバイダーはautoDisposeなので自動的にリフレッシュされる
     });
   }
 
@@ -68,6 +101,7 @@ class _ShoppingListPageState extends ConsumerState<ShoppingListPage>
       ),
       body: RefreshIndicator(
         onRefresh: () async {
+          // 統計プロバイダーはautoDisposeなので自動的にリフレッシュされる
           await ref.read(shoppingListProvider.notifier).loadShoppingLists();
         },
         child: _buildBody(context, shoppingListState),
